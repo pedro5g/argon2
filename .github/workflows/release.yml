@@ -1,0 +1,92 @@
+name: Release
+
+# Publishes to npm when a version tag is pushed, e.g. `git tag v1.0.0 && git push --tags`.
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  # 1. Build a prebuilt native binary on each target platform, so that
+  #    `npm install argon` needs no compiler on the user's machine.
+  prebuild:
+    name: prebuild (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest # linux-x64
+          - os: macos-13 # darwin-x64
+          - os: macos-14 # darwin-arm64
+          - os: windows-latest # win32-x64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      # N-API build: one binary per platform works across all supported Node
+      # versions (stable ABI).
+      - name: Build prebuilt binary
+        run: pnpm prebuild
+
+      - name: Upload prebuild
+        uses: actions/upload-artifact@v4
+        with:
+          name: prebuilds-${{ matrix.os }}
+          path: prebuilds/
+          if-no-files-found: error
+
+  # 2. Collect every prebuild, build the TypeScript, and publish once.
+  publish:
+    name: publish to npm
+    needs: prebuild
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required for npm provenance
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Download all prebuilds
+        uses: actions/download-artifact@v4
+        with:
+          pattern: prebuilds-*
+          path: prebuilds
+          merge-multiple: true
+
+      - name: List prebuilds
+        run: ls -R prebuilds
+
+      - name: Build TypeScript
+        run: pnpm build:ts
+
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

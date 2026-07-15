@@ -1,0 +1,68 @@
+{
+  "name": "argon",
+  "version": "1.0.0",
+  "description": "Hardened Argon2 password hashing for Node.js: node-argon2 compatible PHC digests, wipe-on-free memory handling, memory locking, core-dump exclusion and constant-time native verification.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/",
+    "prebuilds/",
+    "binding.gyp",
+    "argon2_core.cpp",
+    "index.ts",
+    "phc.ts",
+    "__dirname.ts",
+    "argon2/include/",
+    "argon2/src/",
+    "argon2/LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "install": "node-gyp-build",
+    "build": "node-gyp rebuild",
+    "build:ts": "tsc -p tsconfig.build.json",
+    "prebuild": "prebuildify --napi --strip",
+    "prepack": "npm run build:ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test *.test.ts",
+    "test:security": "node --import tsx --test *.sec.ts",
+    "test:swap": "sudo ./scripts/swap-dump-test.sh",
+    "bench": "node --import tsx bench/compare.mts"
+  },
+  "keywords": [
+    "argon2",
+    "argon2id",
+    "password",
+    "hashing",
+    "crypto",
+    "security",
+    "kdf",
+    "phc"
+  ],
+  "author": "pedro5g <pedro.env5@gmail.com>",
+  "license": "MIT",
+  "packageManager": "pnpm@11.13.0",
+  "dependencies": {
+    "node-addon-api": "^8.9.0",
+    "node-gyp-build": "^4.8.4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "argon2": "^0.44.0",
+    "node-gyp": "^11.2.0",
+    "prebuildify": "^6.0.1",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  }
+}
