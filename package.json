@@ -1,6 +1,10 @@
 {
-  "name": "argon",
+  "name": "@pedro5g/argon",
   "version": "1.0.0",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "description": "Hardened Argon2 password hashing for Node.js: node-argon2 compatible PHC digests, wipe-on-free memory handling, memory locking, core-dump exclusion and constant-time native verification.",
   "type": "module",
   "main": "dist/index.js",
