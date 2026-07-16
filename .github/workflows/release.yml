@@ -17,7 +17,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest # linux-x64
-          - os: macos-13 # darwin-x64
+          # - os: macos-13 # darwin-x64 job doesn't run.
           - os: macos-14 # darwin-arm64
           - os: windows-2022 # win32-x64 (VS 2022; windows-latest is VS 2026/v18)
 
