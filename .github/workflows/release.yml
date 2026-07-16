@@ -38,7 +38,7 @@ jobs:
       # N-API build: one binary per platform works across all supported Node
       # versions (stable ABI).
       - name: Build prebuilt binary
-        run: pnpm prebuild
+        run: pnpm run build:prebuilds
 
       - name: Upload prebuild
         uses: actions/upload-artifact@v4

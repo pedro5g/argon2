@@ -36,7 +36,7 @@
     "install": "node-gyp-build",
     "build": "node-gyp rebuild",
     "build:ts": "tsc -p tsconfig.build.json",
-    "prebuild": "prebuildify --napi --strip",
+    "build:prebuilds": "prebuildify --napi --strip",
     "prepack": "npm run build:ts",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test *.test.ts",
