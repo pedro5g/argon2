@@ -17,7 +17,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # windows-2022 ships VS 2022; windows-latest moved to VS 2026 (v18),
+        # which node-gyp 11.5 cannot yet detect.
+        os: [ubuntu-latest, macos-latest, windows-2022]
         # pnpm 11.13 (pinned via packageManager) requires Node >= 22.13.
         node: [22, 24]
 
@@ -47,3 +49,39 @@ jobs:
       - name: Test (security demonstrations)
         if: runner.os == 'Linux'
         run: pnpm test:security
+
+  # Node 18/20 cannot run pnpm 11.13, so prove the addon builds and the full
+  # suite passes on them using npm. Confirms the published package (Node-API 8,
+  # engines >=18) works across the whole supported range.
+  compat:
+    name: compat (node ${{ matrix.node }}, npm)
+    runs-on: ubuntu-latest
+    # packageManager pins pnpm; keep corepack from intercepting npm here.
+    env:
+      COREPACK_ENABLE_STRICT: "0"
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Build native addon
+        run: npm run build
+
+      - name: Build TypeScript
+        run: npm run build:ts
+
+      - name: Test (correctness suite)
+        run: npm test
+
+      - name: Test (security demonstrations)
+        run: npm run test:security

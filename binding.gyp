@@ -74,7 +74,8 @@
     }, {
       "target_name": "argon2",
       "defines+": [
-        "NAPI_VERSION=<(napi_build_version)",
+        # Pin to Node-API 8 so a single prebuilt binary loads on Node 18+.
+        "NAPI_VERSION=8",
         "NODE_ADDON_API_DISABLE_DEPRECATED",
         "NODE_API_NO_EXTERNAL_BUFFERS_ALLOWED"
       ],

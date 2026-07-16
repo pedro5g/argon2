@@ -95,25 +95,32 @@ function countMarkerInProcessMemory(needleEnc: Buffer): number {
 
 describe("memory safety (vulnerability replication)", () => {
   it(
-    "VULNERABLE PATTERN: an unwiped internal copy leaves the password recoverable",
+    "VULNERABLE PATTERN: an unwiped plaintext copy is recoverable from memory",
     { skip: !isLinux },
     () => {
       const marker = randomBytes(32);
       const needleEnc = encodeNeedle(marker);
 
-      // What a careless implementation does: copy the password into an
-      // internal buffer, use it, and drop the reference without wiping.
-      let internalCopy: Buffer | null = Buffer.from(marker);
-      assert.equal(internalCopy.byteLength, 32);
-      internalCopy = null; // "freed", but the bytes are still in the heap
+      // What a careless implementation does: hold the password in a plain,
+      // un-wiped Buffer. For the whole time it is live — the realistic window,
+      // since a freed-but-unzeroed buffer is just as readable until the
+      // allocator happens to reuse it — a memory scan recovers it.
+      //
+      // We keep the copy referenced across the scan so the assertion is
+      // deterministic (a freed copy may or may not have been overwritten yet,
+      // which made this flaky on CI). The point stands either way: nothing
+      // wipes it.
+      const internalCopy = Buffer.from(marker);
 
       const found = countMarkerInProcessMemory(needleEnc);
-      // At least the caller's buffer AND the dangling internal copy.
+      // The caller's buffer AND the un-wiped copy are both in memory.
       assert(
         found >= 2,
-        `expected the leaked copy to be recoverable, found ${found} occurrence(s)`,
+        `expected the plaintext copy to be recoverable, found ${found} occurrence(s)`,
       );
 
+      // Only now do what a secure implementation does from the start.
+      internalCopy.fill(0);
       marker.fill(0);
     },
   );

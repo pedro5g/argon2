@@ -12,6 +12,17 @@
 #include <unistd.h>
 #endif
 
+// Detect explicit_bzero (glibc >= 2.25 and the BSDs) with nested #if guards so
+// that __GLIBC_PREREQ is never evaluated on platforms that do not define it
+// (e.g. macOS/Darwin), where doing so is a hard preprocessor error.
+#if defined(__GLIBC__) && defined(__GLIBC_PREREQ)
+#if __GLIBC_PREREQ(2, 25)
+#define ARGON_HAVE_EXPLICIT_BZERO 1
+#endif
+#elif defined(__OpenBSD__) || defined(__FreeBSD__)
+#define ARGON_HAVE_EXPLICIT_BZERO 1
+#endif
+
 namespace
 {
 
@@ -21,7 +32,7 @@ namespace
       return;
 #if defined(_WIN32)
     SecureZeroMemory(ptr, size);
-#elif defined(__GLIBC__) && defined(__GLIBC_PREREQ) && __GLIBC_PREREQ(2, 25)
+#elif defined(ARGON_HAVE_EXPLICIT_BZERO)
     explicit_bzero(ptr, size);
 #else
     volatile char *p = static_cast<volatile char *>(ptr);
