@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 jobs:
   # 1. Build a prebuilt native binary on each target platform, so that
